@@ -45,7 +45,7 @@ nelhson-skills/
 └── README.md
 ```
 
-- `marketplace.json` — catalog. `metadata.pluginRoot: "./plugins"` lets local entries use short sources (`"source": "android-kotlin"`).
+- `marketplace.json` — catalog. Local plugin sources are relative paths from the repo root (`"source": "./plugins/android-kotlin"`).
 - `plugin.json` — plugin manifest; only `name` is required.
 - `SKILL.md` — skill content with YAML frontmatter (`name`, `description`). The `description` drives auto-invocation, so phrase it as "…Use when…".
 - Skills may have supporting files (`reference.md`, `scripts/`) beside `SKILL.md`, but must never reference paths outside their plugin directory — plugins are copied wholesale into the plugin cache on install.
@@ -92,7 +92,7 @@ Curated skill groups pulled live from `github.com/android/skills` (jetpack-compo
 2. Add skills under `plugins/<tech>/skills/<skill-name>/SKILL.md` (kebab-case names).
 3. Append an entry to `plugins[]` in `.claude-plugin/marketplace.json`:
    ```json
-   { "name": "<tech>", "source": "<tech>", "description": "..." }
+   { "name": "<tech>", "source": "./plugins/<tech>", "description": "..." }
    ```
 4. Validate and commit:
    ```powershell

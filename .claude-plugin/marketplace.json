@@ -5,20 +5,17 @@
     "email": "borisveriga@gmail.com"
   },
   "description": "Personal Kotlin-focused skill packs for Claude Code: Android, backend (Ktor/Spring Boot), and curated external sources.",
-  "metadata": {
-    "pluginRoot": "./plugins"
-  },
   "plugins": [
     {
       "name": "android-kotlin",
-      "source": "./android-kotlin",
+      "source": "./plugins/android-kotlin",
       "description": "Android development skills: Compose, ViewModel, coroutines, architecture, testing, data layer, Gradle.",
       "category": "android",
       "keywords": ["kotlin", "android", "compose"]
     },
     {
       "name": "backend-kotlin",
-      "source": "./backend-kotlin",
+      "source": "./plugins/backend-kotlin",
       "description": "Kotlin server-side skills: Ktor, Spring Boot (Kotlin), server coroutines.",
       "category": "backend",
       "keywords": ["kotlin", "ktor", "spring-boot"]
