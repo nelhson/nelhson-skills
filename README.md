@@ -18,6 +18,9 @@ claude plugin validate .
 claude plugin marketplace add E:\projects\kotlin-server\nelhson-skills
 #    or inside a Claude Code session:
 #    /plugin marketplace add E:\projects\kotlin-server\nelhson-skills
+
+# On any other machine, register straight from GitHub (HTTPS):
+claude plugin marketplace add https://github.com/nelhson/nelhson-skills.git
 ```
 
 Then, in a Claude Code session:
