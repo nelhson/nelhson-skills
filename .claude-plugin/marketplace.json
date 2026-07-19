@@ -1,0 +1,47 @@
+{
+  "name": "nelhson-skills",
+  "owner": {
+    "name": "Boris Veriga",
+    "email": "borisveriga@gmail.com"
+  },
+  "description": "Personal Kotlin-focused skill packs for Claude Code: Android, backend (Ktor/Spring Boot), and curated external sources.",
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "android-kotlin",
+      "source": "./android-kotlin",
+      "description": "Android development skills: Compose, ViewModel, coroutines, architecture, testing, data layer, Gradle.",
+      "category": "android",
+      "keywords": ["kotlin", "android", "compose"]
+    },
+    {
+      "name": "backend-kotlin",
+      "source": "./backend-kotlin",
+      "description": "Kotlin server-side skills: Ktor, Spring Boot (Kotlin), server coroutines.",
+      "category": "backend",
+      "keywords": ["kotlin", "ktor", "spring-boot"]
+    },
+    {
+      "name": "android-official",
+      "source": {
+        "source": "github",
+        "repo": "android/skills"
+      },
+      "strict": false,
+      "skills": [
+        "./jetpack-compose",
+        "./jetpack-compose/migration",
+        "./navigation",
+        "./testing",
+        "./performance",
+        "./system"
+      ],
+      "description": "Curated skills from Google's official android/skills repo, tracked upstream.",
+      "homepage": "https://github.com/android/skills",
+      "category": "android",
+      "keywords": ["android", "google", "official"]
+    }
+  ]
+}

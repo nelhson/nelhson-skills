@@ -1,0 +1,10 @@
+{
+  "name": "backend-kotlin",
+  "description": "Kotlin server-side skills: Ktor services, Spring Boot in Kotlin, and server coroutine patterns.",
+  "author": {
+    "name": "Boris Veriga",
+    "email": "borisveriga@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["kotlin", "ktor", "spring-boot", "coroutines", "backend"]
+}

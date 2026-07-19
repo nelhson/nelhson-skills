@@ -1,0 +1,10 @@
+{
+  "name": "android-kotlin",
+  "description": "Android development skills for Kotlin: Jetpack Compose, ViewModel state, coroutines, architecture, testing, data layer, Gradle build logic.",
+  "author": {
+    "name": "Boris Veriga",
+    "email": "borisveriga@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["kotlin", "android", "jetpack-compose", "viewmodel", "coroutines"]
+}

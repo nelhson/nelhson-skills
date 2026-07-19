@@ -1,0 +1,14 @@
+# IDE (defensive — IntelliJ may recreate these if the folder is opened)
+.idea/
+*.iml
+out/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Misc
+*.stackdump
+
+# Claude Code local state
+.claude/settings.local.json
