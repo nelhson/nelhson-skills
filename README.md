@@ -107,24 +107,26 @@ Two mechanisms, used for different purposes. Rule of thumb: **reference when you
 
 ### a) Referenced (stays fresh upstream)
 
-A marketplace entry with a `github` source, like `android-official`:
+A marketplace entry with a git `url` source, like `android-official`:
 
 ```json
 {
   "name": "android-official",
-  "source": { "source": "github", "repo": "android/skills" },
+  "source": { "source": "url", "url": "https://github.com/android/skills.git" },
   "strict": false,
   "skills": ["./jetpack-compose", "./navigation", "..."]
 }
 ```
 
 - `strict: false` — required when the external repo has no `plugin.json` (it's a plain skills collection).
-- `skills` — list of directories containing `<skill>/SKILL.md` to load.
+- `skills` — list of directories containing `<skill>/SKILL.md` to load (one level of nesting).
+- Use the `url` source type with an HTTPS URL. The `{"source": "github", "repo": "owner/repo"}` shorthand clones over **SSH** by default, which fails on machines without GitHub SSH keys (set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` if you prefer the shorthand).
 - To pin a known-good state, add `"sha": "<40-char commit>"` to the source object.
 - To add another external repo, append another entry. For a single skill from a large repo, use a sparse source:
   ```json
-  { "source": "git-subdir", "url": "android/skills", "path": "navigation/navigation-3" }
+  { "source": "git-subdir", "url": "https://github.com/android/skills.git", "path": "navigation/navigation-3" }
   ```
+- Google's repo has more categories than currently referenced (camera, security, wear, xr, play, devtools, ...) — add their paths to the `skills` array when needed.
 - Refresh with `/plugin marketplace update nelhson-skills` (new upstream commits count as new plugin versions because no `version` is pinned).
 
 ### b) Vendored (copied for customization)
