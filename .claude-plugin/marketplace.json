@@ -21,6 +21,13 @@
       "keywords": ["kotlin", "ktor", "spring-boot"]
     },
     {
+      "name": "kotlin-common",
+      "source": "./plugins/kotlin-common",
+      "description": "Technology-agnostic Kotlin language skills: modern 2.x language features and modernization hints.",
+      "category": "language",
+      "keywords": ["kotlin", "language", "features"]
+    },
+    {
       "name": "android-official",
       "source": {
         "source": "url",

@@ -1,0 +1,10 @@
+{
+  "name": "kotlin-common",
+  "description": "Technology-agnostic Kotlin language skills: modern language features, idioms, and modernization hints.",
+  "author": {
+    "name": "Boris Veriga",
+    "email": "borisveriga@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": ["kotlin", "language", "modernization"]
+}

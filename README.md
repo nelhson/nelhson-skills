@@ -6,6 +6,7 @@ Each technology is a separate plugin (skill pack) that can be enabled independen
 
 - **android-kotlin** — my own Android development skills (Compose, ViewModel, coroutines, architecture, testing, data layer, Gradle).
 - **backend-kotlin** — Kotlin server-side skills (Ktor, Spring Boot in Kotlin, server coroutines).
+- **kotlin-common** — technology-agnostic Kotlin language skills (modern 2.x language features, modernization hints).
 - **android-official** — curated skills referenced live from Google's official [android/skills](https://github.com/android/skills) repo.
 
 ## Quick start
@@ -28,6 +29,7 @@ Then, in a Claude Code session:
 ```
 /plugin install android-kotlin@nelhson-skills
 /plugin install backend-kotlin@nelhson-skills
+/plugin install kotlin-common@nelhson-skills
 /plugin install android-official@nelhson-skills
 ```
 
@@ -84,6 +86,12 @@ nelhson-skills/
 | `ktor-server` | Ktor routing organization, plugins, Koin DI, config, testApplication |
 | `spring-boot-kotlin` | Kotlin-idiomatic Spring Boot: DI, compiler plugins, entities vs DTOs, coroutine controllers |
 | `kotlin-backend-coroutines` | Server coroutine patterns: dispatchers, fan-out, Flow streaming, timeouts, cancellation |
+
+### kotlin-common
+
+| Skill | Purpose |
+|---|---|
+| `kotlin-modern-features` | Advisory catalog of modern Kotlin 2.x language features (context parameters, guard conditions, explicit backing fields, …) with stability/version info — suggests them while writing or reviewing Kotlin code |
 
 ### android-official (external, referenced)
 
