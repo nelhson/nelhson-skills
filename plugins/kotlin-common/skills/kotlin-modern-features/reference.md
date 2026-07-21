@@ -111,6 +111,12 @@ fun handle(r: Result) {
 }
 ```
 
+---
+
+# Watchlist examples — DO NOT USE
+
+Everything below is experimental/preview. Kept only for reference so the examples are ready when a feature is promoted to stable; never suggest or apply these in a project.
+
 ## Collection literals (experimental, 2.4, `-Xcollection-literals`)
 
 ```kotlin

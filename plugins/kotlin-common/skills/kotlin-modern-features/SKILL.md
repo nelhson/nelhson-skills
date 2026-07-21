@@ -11,7 +11,7 @@ Advisory "note" skill: when code being written or reviewed matches a **trigger**
 
 1. **Check the project's Kotlin version first** — look in `gradle/libs.versions.toml` (`kotlin = "..."`), `build.gradle.kts` (`kotlin("jvm") version`), or `gradle.properties`. Never suggest a feature the project's version cannot use.
 2. **Stable features**: suggest or apply freely once the version allows.
-3. **Experimental/preview features**: mention as an option and name the required compiler flag; do NOT add them to production code without the user's explicit go-ahead.
+3. **Experimental/preview features**: **do NOT use or suggest them.** The watchlist below exists only to track them until Kotlin marks them stable, at which point they get promoted into the stable table.
 4. **Hint, not mandate**: during review, phrase as "Kotlin X.Y lets you simplify this with …". Only rewrite code when the user asked for a refactor.
 5. Code examples for every feature live in [reference.md](reference.md) — read it only when actually applying a feature.
 
@@ -30,7 +30,9 @@ Advisory "note" skill: when code being written or reviewed matches a **trigger**
 | **Data-flow exhaustiveness for `when`** | 2.3 | Redundant `else` branch after sealed-type/enum checks already proven exhaustive by earlier flow → drop the `else` |
 | **`return` in expression bodies** | 2.3 | Early-return needs forced a block body on an otherwise single-expression function (explicit return type required) |
 
-## Experimental / preview features (need opt-in — ask before using)
+## Watchlist: experimental / preview features — DO NOT USE
+
+Not to be suggested or applied in any project. Tracked here only so they can be moved to the stable table above once a Kotlin release stabilizes them.
 
 | Feature | Since | Flag / opt-in | Trigger |
 |---|---|---|---|
@@ -41,6 +43,6 @@ Advisory "note" skill: when code being written or reviewed matches a **trigger**
 | **Name-based destructuring** | 2.3.20 | experimental | Positional destructuring that breaks when data-class properties are reordered → match by property name |
 | **Improved compile-time constants** | 2.4 | `-Xintrinsic-const-evaluation` | `const val` wants string functions, unsigned ops, or enum `.name` |
 
-## On the roadmap
+## Keeping this catalog up to date
 
-Rich errors (union-type error handling) and name-based destructuring stabilization are planned; Kotlin 2.4.20 is due Sep 2026 and 2.5.0 Dec 2026. If the project uses a Kotlin version newer than 2.4.0, check the matching "What's new" page at kotlinlang.org before assuming this catalog is complete.
+Rich errors (union-type error handling) and name-based destructuring stabilization are planned; Kotlin 2.4.20 is due Sep 2026 and 2.5.0 Dec 2026. When asked to update this skill (or when a project uses a Kotlin version newer than 2.4.0), check the matching "What's new" page at kotlinlang.org: move watchlist entries that became stable into the stable table, and add newly announced features to the watchlist.
