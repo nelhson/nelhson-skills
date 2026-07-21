@@ -1,6 +1,6 @@
 ---
 name: android-gradle-logic
-description: Expert guidance on setting up scalable Gradle build logic using Convention Plugins and Version Catalogs.
+description: Expert guidance on setting up scalable Gradle build logic using Convention Plugins and Version Catalogs. Use when structuring a build-logic module, de-duplicating build.gradle.kts files across modules, writing convention plugins, or setting up libs.versions.toml.
 ---
 
 # Android Gradle Build Logic & Convention Plugins
@@ -59,8 +59,8 @@ Use the Version Catalog for both libraries *and* plugins.
 
 ```toml
 [versions]
-androidGradlePlugin = "8.2.0"
-kotlin = "1.9.20"
+androidGradlePlugin = "9.3.0"
+kotlin = "2.4.0"
 
 [libraries]
 # ...
@@ -72,6 +72,8 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 # Define your own plugins here
 nowinandroid-android-application = { id = "nowinandroid.android.application", version = "unspecified" }
 ```
+
+> Note: AGP 9+ ships built-in Kotlin support, so on AGP 9.x the separate `org.jetbrains.kotlin.android` plugin is no longer required (see the official "Migrate to built-in Kotlin" guide); keep the `kotlin` pin for the stdlib and other Kotlin plugins.
 
 ## Step 3: Create a Convention Plugin
 
@@ -92,7 +94,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             }
 
             extensions.configure<ApplicationExtension> {
-                defaultConfig.targetSdk = 34
+                defaultConfig.targetSdk = 36
                 // Configure common options here
             }
         }

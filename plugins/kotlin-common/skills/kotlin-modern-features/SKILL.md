@@ -43,7 +43,7 @@ Advisory "note" skill: when code being written or reviewed matches a **trigger**
 | **`Base64` API** | 2.2 | `java.util.Base64` or hand-rolled encoding → multiplatform `kotlin.io.encoding.Base64` (`Default`/`UrlSafe`/`Mime`/`Pem`) |
 | **`HexFormat` API** | 2.2 | Manual hex conversion (`String.format("%02x")`, lookup tables) → `toHexString()` / `hexToByteArray()` |
 | **`kotlin.time.Instant` / `Clock`** | 2.3 | `System.currentTimeMillis()` or `java.time.Instant` in shared/common code; untestable time access → inject `Clock`, use `kotlin.time.Instant` |
-| **`kotlin.uuid.Uuid`** | 2.4 | `java.util.UUID` in common/multiplatform code → `kotlin.uuid.Uuid` (v4/v7 generation, `parseOrNull`) |
+| **`kotlin.uuid.Uuid`** | 2.4 | `java.util.UUID` in common/multiplatform code → `kotlin.uuid.Uuid` (`Uuid.random()` for v4, `parse`/`parseOrNull`, `<`/`>` comparison). Note: `generateV4()`/`generateV7()` are still experimental (`@ExperimentalUuidApi`) — do not suggest them |
 
 ## Watchlist: experimental / preview features — DO NOT USE
 
@@ -54,10 +54,10 @@ Not to be suggested or applied in any project. Tracked here only so they can be 
 | **Collection literals** | 2.4 | `-Xcollection-literals` | `listOf(...)` / `mutableListOf(...)` boilerplate → `["a", "b"]` |
 | **Explicit context arguments** | 2.4 | `-Xexplicit-context-arguments` | Ambiguous overloads that differ only by context parameters → pass the context argument explicitly at the call site |
 | **Unused return value checker** | 2.3 | `-Xreturn-value-checker=check` or `=full`; `@MustUseReturnValues` / `@IgnorableReturnValue` | Bugs from silently ignored return values (`Result`, immutable-collection ops) |
-| **Context-sensitive resolution** | 2.2 (improved 2.3) | `-Xcontext-sensitive-resolution` (default-on parts in 2.3) | Repetitive enum/sealed-type prefixes in `when` branches → bare entry names |
+| **Context-sensitive resolution** | 2.2 (improved 2.3) | `-Xcontext-sensitive-resolution` (still experimental as of 2.4) | Repetitive enum/sealed-type prefixes in `when` branches → bare entry names |
 | **Name-based destructuring** | 2.3.20 | experimental | Positional destructuring that breaks when data-class properties are reordered → match by property name |
 | **Improved compile-time constants** | 2.4 | `-Xintrinsic-const-evaluation` | `const val` wants string functions, unsigned ops, or enum `.name` |
 
 ## Keeping this catalog up to date
 
-Rich errors (union-type error handling) and name-based destructuring stabilization are planned; Kotlin 2.4.20 is due Sep 2026 and 2.5.0 Dec 2026. When asked to update this skill (or when a project uses a Kotlin version newer than 2.4.0), check the matching "What's new" page at kotlinlang.org: move watchlist entries that became stable into the stable table, and add newly announced features to the watchlist.
+Rich errors (union-type error handling) and name-based destructuring stabilization are planned — verify against the current roadmap at kotlinlang.org/docs/roadmap.html. By the documented cadence (tooling releases ~3 months after a language release, language releases every ~6 months; 2.4.0 shipped Jun 2026 and 2.4.20-Beta1 is out), 2.4.20 is expected around Sep 2026 and 2.5.0 around Dec 2026 — treat these as estimates, not announced dates. When asked to update this skill (or when a project uses a Kotlin version newer than 2.4.0), check the matching "What's new" page at kotlinlang.org: move watchlist entries that became stable into the stable table, and add newly announced features to the watchlist.

@@ -201,9 +201,12 @@ class OrderService(private val clock: Clock = Clock.System) {
 ```kotlin
 // Before: java.util.UUID (JVM-only)
 // After: multiplatform
-val id = Uuid.generateV4()
-val sortable = Uuid.generateV7()          // time-ordered, DB-index friendly
+val id = Uuid.random()                    // random v4 uuid (stable)
 val parsed = Uuid.parseOrNull(input)      // null instead of exception
+val ordered = uuidA < uuidB               // Comparable since 2.4
+
+// NOT yet: Uuid.generateV4() / Uuid.generateV7() (time-ordered, DB-index
+// friendly) are still @ExperimentalUuidApi — do not suggest them until stable.
 ```
 
 ---

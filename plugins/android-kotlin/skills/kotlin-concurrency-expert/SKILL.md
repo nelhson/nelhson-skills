@@ -9,6 +9,8 @@ description: Kotlin Coroutines review and remediation for Android. Use when aske
 
 Review and fix Kotlin Coroutines issues in Android codebases by applying structured concurrency, lifecycle safety, proper scoping, and modern best practices with minimal behavior changes.
 
+The canonical coroutine rules and code patterns (dispatcher injection, `repeatOnLifecycle`, state encapsulation, cancellation handling, `callbackFlow`, testing) live in the `android-coroutines` skill — consult it for the full rule set; this skill covers the review and remediation workflow.
+
 ## Workflow
 
 ### 1. Triage the Issue
@@ -34,109 +36,14 @@ Common fixes:
 - **Callback APIs**: Convert listeners to `callbackFlow` with proper `awaitClose` cleanup.
 - **Hardcoded Dispatchers**: Inject `CoroutineDispatcher` via constructor for testability.
 
-## Critical Rules
+For the good/bad code examples backing each of these fixes, see the corresponding rules in the `android-coroutines` skill.
 
-### Dispatcher Injection (Testability)
+### 3. Verify the Fix
 
-```kotlin
-// CORRECT: Inject dispatcher
-class UserRepository(
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-) {
-    suspend fun fetchUser() = withContext(ioDispatcher) { ... }
-}
+- Confirm the symptom is gone (no ANR, leak, or stale state) without changing observable behavior.
+- Ensure fixed code is covered by a test using `runTest` and an injected `TestDispatcher` (pattern in the `android-coroutines` skill).
 
-// INCORRECT: Hardcoded dispatcher
-class UserRepository {
-    suspend fun fetchUser() = withContext(Dispatchers.IO) { ... }
-}
-```
-
-### Lifecycle-Aware Collection
-
-```kotlin
-// CORRECT: Use repeatOnLifecycle
-viewLifecycleOwner.lifecycleScope.launch {
-    viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-        viewModel.uiState.collect { state -> updateUI(state) }
-    }
-}
-
-// INCORRECT: Direct collection (unsafe, deprecated)
-lifecycleScope.launchWhenStarted {
-    viewModel.uiState.collect { state -> updateUI(state) }
-}
-```
-
-### State Encapsulation
-
-```kotlin
-// CORRECT: Expose read-only StateFlow
-class MyViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
-}
-
-// INCORRECT: Exposed mutable state
-class MyViewModel : ViewModel() {
-    val uiState = MutableStateFlow(UiState()) // Leaks mutability
-}
-```
-
-### Exception Handling
-
-```kotlin
-// CORRECT: Rethrow CancellationException
-try {
-    doSuspendWork()
-} catch (e: CancellationException) {
-    throw e // Must rethrow!
-} catch (e: Exception) {
-    handleError(e)
-}
-
-// INCORRECT: Swallows cancellation
-try {
-    doSuspendWork()
-} catch (e: Exception) {
-    handleError(e) // CancellationException swallowed!
-}
-```
-
-### Cooperative Cancellation
-
-```kotlin
-// CORRECT: Check for cancellation in tight loops
-suspend fun processLargeList(items: List<Item>) {
-    items.forEach { item ->
-        ensureActive() // Check cancellation
-        processItem(item)
-    }
-}
-
-// INCORRECT: Non-cooperative (ignores cancellation)
-suspend fun processLargeList(items: List<Item>) {
-    items.forEach { item ->
-        processItem(item) // Never checks cancellation
-    }
-}
-```
-
-### Callback Conversion
-
-```kotlin
-// CORRECT: callbackFlow with awaitClose
-fun locationUpdates(): Flow<Location> = callbackFlow {
-    val listener = LocationListener { location ->
-        trySend(location)
-    }
-    locationManager.requestLocationUpdates(listener)
-    
-    awaitClose { locationManager.removeUpdates(listener) }
-}
-```
-
-## Scope Guidelines
+## Scope Guidelines (Diagnosis Aid)
 
 | Scope | Use When | Lifecycle |
 |-------|----------|-----------|
@@ -145,22 +52,6 @@ fun locationUpdates(): Flow<Location> = callbackFlow {
 | `repeatOnLifecycle` | Flow collection in UI | Started/Stopped with lifecycle state |
 | `applicationScope` (injected) | App-wide background work | Application lifetime |
 | `GlobalScope` | **NEVER USE** | Breaks structured concurrency |
-
-## Testing Pattern
-
-```kotlin
-@Test
-fun `loading data updates state`() = runTest {
-    val testDispatcher = StandardTestDispatcher(testScheduler)
-    val repository = FakeRepository()
-    val viewModel = MyViewModel(repository, testDispatcher)
-    
-    viewModel.loadData()
-    advanceUntilIdle()
-    
-    assertEquals(UiState.Success(data), viewModel.uiState.value)
-}
-```
 
 ## Reference Material
 

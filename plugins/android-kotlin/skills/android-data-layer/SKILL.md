@@ -1,6 +1,6 @@
 ---
 name: android-data-layer
-description: Guidance on implementing the Data Layer using Repository pattern, Room (Local), and Retrofit (Remote) with offline-first synchronization.
+description: Guidance on implementing the Data Layer using Repository pattern, Room (Local), and Retrofit (Remote) with offline-first synchronization. Use when building repositories, wiring Room + Retrofit together, adding offline-first caching/sync, or choosing local storage (Room vs DataStore).
 ---
 
 # Android Data Layer & Offline-First
@@ -18,13 +18,15 @@ The Data Layer coordinates data from multiple sources.
         private val newsDao: NewsDao,
         private val newsApi: NewsApi
     ) {
-        // Expose data from Local DB as the source of truth
+        // Expose data from Local DB as the source of truth, mapped to domain models
         val newsStream: Flow<List<News>> = newsDao.getAllNews()
+            .map { entities -> entities.map(NewsEntity::toDomainModel) }
 
-        // Sync operation
+        // Sync operation: map network DTOs to Room entities before inserting.
+        // Never insert DTOs directly — keep network and database models decoupled.
         suspend fun refreshNews() {
-            val remoteNews = newsApi.fetchLatest()
-            newsDao.insertAll(remoteNews)
+            val remoteNews: List<NetworkNews> = newsApi.fetchLatest()
+            newsDao.insertAll(remoteNews.map(NetworkNews::toEntity))
         }
     }
     ```
@@ -33,6 +35,7 @@ The Data Layer coordinates data from multiple sources.
 *   **Usage**: Primary cache and offline storage.
 *   **Entities**: Define `@Entity` data classes.
 *   **DAOs**: Return `Flow<T>` for observable data.
+*   **Small key-value / typed settings**: Use **DataStore** instead of `SharedPreferences` (which it replaces): *Preferences DataStore* for simple key-value pairs, *Proto DataStore* for schema-backed typed objects. Both expose reads as `Flow` and use suspend functions for writes. Room remains the choice for relational/queryable data.
 
 ### 3. Remote Data (Retrofit)
 *   **Usage**: Fetching data from backend.

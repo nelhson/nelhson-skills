@@ -1,6 +1,6 @@
 ---
 name: android-retrofit
-description: Expert guidance on setting up and using Retrofit for type-safe HTTP networking in Android. Covers service definitions, coroutines, OkHttp configuration, and Hilt integration.
+description: Expert guidance on setting up and using Retrofit for type-safe HTTP networking in Android. Use when defining API service interfaces, configuring Retrofit/OkHttp, sending requests (paths, queries, bodies, headers), or handling network errors. Covers service definitions, coroutines, OkHttp configuration, and Hilt integration.
 ---
 
 # Android Networking with Retrofit

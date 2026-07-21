@@ -8,8 +8,8 @@ Each technology is a separate plugin (skill pack) that can be enabled independen
 - **backend-kotlin** — Kotlin server-side skills (Ktor, Spring Boot in Kotlin, server coroutines).
 - **kotlin-common** — technology-agnostic Kotlin language skills (modern 2.x language features, modernization hints).
 - **android-official** — curated skills referenced live from Google's official [android/skills](https://github.com/android/skills) repo.
-- **kotlin-official** — tooling/migration skills referenced live from JetBrains' official [Kotlin/kotlin-agent-skills](https://github.com/Kotlin/kotlin-agent-skills) repo.
-- **kmp-community** — KMP/Compose Multiplatform skills referenced live from [mmiani/kotlin-kmp-claude-agent-skills](https://github.com/mmiani/kotlin-kmp-claude-agent-skills) (community, Apache-2.0, grounded in official Google/JetBrains docs).
+- **kotlin-official** — tooling/migration/JPA skills referenced live from JetBrains' official [Kotlin/kotlin-agent-skills](https://github.com/Kotlin/kotlin-agent-skills) repo.
+- **kmp-community** — curated KMP/Compose Multiplatform skills referenced from [mmiani/kotlin-kmp-claude-agent-skills](https://github.com/mmiani/kotlin-kmp-claude-agent-skills) (community, Apache-2.0), pinned to a reviewed commit.
 
 ## Quick start
 
@@ -73,15 +73,16 @@ nelhson-skills/
 | `android-gradle-logic` | Convention plugins and version catalogs |
 | `android-retrofit` | Type-safe networking with Retrofit |
 | `android-testing` | Unit/integration/Hilt/screenshot testing strategy |
-| `android-viewmodel` | StateFlow UI state, SharedFlow events |
+| `android-viewmodel` | StateFlow UI state, one-off events modeled as state |
 | `coil-compose` | Image loading with Coil in Compose |
 | `compose-navigation` | Navigation Compose patterns |
 | `compose-performance-audit` | Diagnosing recomposition/jank issues |
 | `compose-ui` | State hoisting, performance, theming |
 | `gradle-build-performance` | Build speed debugging and optimization |
-| `kotlin-concurrency-expert` | Coroutine review and remediation |
+| `kotlin-concurrency-expert` | Coroutine review and remediation (canonical rules live in `android-coroutines`) |
 | `rxjava-to-coroutines-migration` | RxJava → Coroutines/Flow migration |
-| `xml-to-compose-migration` | XML Views → Compose migration |
+
+> `xml-to-compose-migration` was retired in favor of the more rigorous external `android-official` migration skill (`migrate-xml-views-to-jetpack-compose`).
 
 ### backend-kotlin
 
@@ -99,7 +100,12 @@ nelhson-skills/
 
 ### android-official (external, referenced)
 
-Curated skill groups pulled live from `github.com/android/skills` (jetpack-compose, navigation, testing, performance, system). Note: Google's skills target multiple agents and a few reference their `android` CLI — treat those parts as reference content.
+Curated skill groups pulled live from `github.com/android/skills` (jetpack-compose, navigation, testing, performance, profilers/Perfetto, build/AGP-9 upgrade, security, system). Notes:
+
+- Google's skills target multiple agents and a few reference their `android` CLI or write `AGENTS.md` — treat those parts as reference content.
+- `jetpack-compose/theming/styles` is **deliberately not referenced**: it requires experimental Compose APIs (`ExperimentalFoundationStyleApi`, alpha BOM), which conflicts with the do-not-use-experimental convention.
+- The AGP-9 skill here is Android-only; the KMP AGP-9 migration lives in `kotlin-official` — their descriptions self-disambiguate.
+- The repo is updated by Google automation and referenced **by path**, so an upstream re-org can silently drop skills — periodically re-check the referenced paths after `/plugin marketplace update` (see Maintenance notes).
 
 ### kotlin-official (external, referenced)
 
@@ -111,13 +117,16 @@ Official JetBrains skills pulled live from `github.com/Kotlin/kotlin-agent-skill
 | `kotlin-tooling-cocoapods-spm-migration` | CocoaPods → Swift Package Manager migration for KMP iOS targets |
 | `kotlin-tooling-native-build-performance` | Kotlin/Native build speed diagnosis |
 | `kotlin-tooling-immutable-collections-0-5-x-migration` | kotlinx.collections.immutable 0.5.x migration |
-| `kotlin-tooling-java-to-kotlin` | Java → Kotlin conversion |
+| `kotlin-tooling-java-to-kotlin` | Java → Kotlin conversion (12 framework guides: Spring, Hibernate, Dagger/Hilt, …) |
+| `kotlin-backend-jpa-entity-mapping` | JPA/Hibernate entity design in Kotlin (equals/hashCode, N+1, lazy-init) — deeper than the short rule in `spring-boot-kotlin`, so both coexist |
 
-Deliberately excluded: `kotlin-backend-jpa-entity-mapping` — overlaps the locally authored `backend-kotlin` plugin.
+### kmp-community (external, referenced, sha-pinned)
 
-### kmp-community (external, referenced)
+Curated subset (8 of 15) from `github.com/mmiani/kotlin-kmp-claude-agent-skills` (community-maintained, Apache-2.0, grounded in official Android/Kotlin/Compose guidance). Neither Google (`android/skills`) nor JetBrains publish CMP UI skills — this fills that gap. Kept: the genuinely KMP-unique skills — `kmp-bridges` (expect/actual), `data-layer`, `state-management`, `navigation-compose-multiplatform`, `app-links-and-deep-links`, `gradle-governance`, `testing-kmp`, `modularization`.
 
-All 15 KMP/Compose Multiplatform skills pulled live from `github.com/mmiani/kotlin-kmp-claude-agent-skills` (community-maintained, Apache-2.0, grounded in official Android/Kotlin/Compose guidance). Covers CMP UI, navigation, adaptive resources, KMP data layer, platform bridges (expect/actual), deep links, Gradle governance, testing, architecture/code review, modularization, state management, and feature/bugfix/refactor workflows. Neither Google (`android/skills`) nor JetBrains publish CMP UI skills — this fills that gap.
+Deliberately excluded (7): `kmp-code-review` (977 lines) and `feature-implementation` (993 lines) — huge generic rubrics that collide with the built-in `/code-review` and normal implementation flow; `ui-adaptive-resources` — superseded by `android-official`'s better `adaptive` skill; `ui-compose-multiplatform`, `architecture-review`, `bugfix`, `refactor-safety` — mostly platform-generic content already covered locally.
+
+**Pinned to sha `b73b7c1f8bad9c3068a619aa69d383d40809c248`** (reviewed 2026-07-21): single-maintainer repo with known editing defects and non-skill payload (`agents/`, `commands/`, `hooks/`, `settings.local.json`) at the root — review upstream diffs before bumping the pin.
 
 ## Adding a new technology
 
@@ -186,4 +195,5 @@ No `version` fields are set anywhere — **every git commit is a new version** (
 
 - After editing skills: commit, then `/plugin marketplace update nelhson-skills` and `/plugin update <plugin>` (or restart Claude Code). Installed plugins are cached copies — edits are **not** live.
 - Validate any change with `claude plugin validate .` before committing.
+- Periodically (e.g. monthly) run `/plugin marketplace update nelhson-skills` and confirm the `android-official` referenced paths still resolve — Google's automation re-organizes that repo and path-based references fail silently. `kmp-community` is sha-pinned; review its upstream diff before bumping.
 - The original personal copies of the android skills lived in `C:\Users\boris\.claude\skills\`; once the plugin versions are confirmed working, delete the migrated ones there to avoid duplicate skill listings (only `owasp-security` intentionally remains personal).

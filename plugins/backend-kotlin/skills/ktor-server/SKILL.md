@@ -1,6 +1,6 @@
 ---
 name: ktor-server
-description: Best practices for building Ktor server applications in Kotlin - routing DSL organization, plugin installation, dependency injection with Koin, configuration, and testing with testApplication. Use when writing or reviewing Ktor services.
+description: Best practices for building Ktor server applications in Kotlin - routing DSL organization, plugin installation, dependency injection (built-in DI plugin or Koin), configuration, and testing with testApplication. Use when writing or reviewing Ktor services.
 ---
 
 # Ktor Server Expert Skill
@@ -12,18 +12,9 @@ This skill provides authoritative rules and patterns for building production-qua
 *   **Routing**: Organizing the routing DSL into feature-based `Route` extension functions.
 *   **Plugins**: Installing and configuring core plugins (`ContentNegotiation`, `StatusPages`, `CallLogging`, `Authentication`).
 *   **Serialization**: Type-safe request/response bodies with `kotlinx.serialization`.
-*   **Dependency Injection**: Wiring services and repositories with Koin.
+*   **Dependency Injection**: Wiring services and repositories with the built-in DI plugin (Ktor 3.2+) or Koin.
 *   **Configuration**: Externalizing settings via `application.yaml` / environment variables.
 *   **Testing**: Writing integration tests with `testApplication`.
-
-## Applicability
-
-Activate this skill when the user asks to:
-*   "Create a Ktor server / REST API / endpoint."
-*   "Add authentication / JWT to a Ktor app."
-*   "Structure or refactor Ktor routes."
-*   "Handle errors / status codes in Ktor."
-*   "Test a Ktor application."
 
 ## Critical Rules & Constraints
 
@@ -49,11 +40,13 @@ fun Route.userRoutes(service: UserService) {
 }
 
 // Application.kt
-fun Application.module() {
+suspend fun Application.module() {
     configurePlugins()
+    val userService: UserService = dependencies.resolve()   // built-in DI — see rule 5
+    val orderService: OrderService = dependencies.resolve()
     routing {
-        userRoutes(get())   // Koin: get() resolves UserService
-        orderRoutes(get())
+        userRoutes(userService)
+        orderRoutes(orderService)
     }
 }
 ```
@@ -96,6 +89,24 @@ install(StatusPages) {
 }
 ```
 
+*   **ALWAYS** validate request bodies with the `RequestValidation` plugin instead of ad-hoc checks inside handlers; map its `RequestValidationException` to a 400 in `StatusPages`.
+
+```kotlin
+install(RequestValidation) {
+    validate<CreateUserRequest> { req ->
+        if (req.email.isBlank()) ValidationResult.Invalid("email must not be blank")
+        else ValidationResult.Valid
+    }
+}
+
+// in StatusPages:
+exception<RequestValidationException> { call, cause ->
+    call.respond(HttpStatusCode.BadRequest, ErrorResponse("VALIDATION", cause.reasons.joinToString()))
+}
+```
+
+*   For type-safe routing (compile-checked paths and parameters), consider the `Resources` plugin: `@Resource("/users/{id}") class UserById(val id: Long)` + `get<UserById> { }`.
+
 ### 4. Authentication (JWT)
 *   Configure JWT in one place; protect routes with `authenticate("auth-jwt") { }` blocks.
 *   **NEVER** hardcode secrets — read them from configuration/environment.
@@ -117,11 +128,28 @@ install(Authentication) {
 }
 ```
 
-### 5. Dependency Injection with Koin
+### 5. Dependency Injection
 *   **NEVER** instantiate services/repositories inline in routes.
-*   **ALWAYS** declare them in Koin modules and resolve via `get()` / constructor injection.
+*   **For new services on Ktor 3.2+**, prefer the built-in DI plugin (`io.ktor:ktor-server-di`, package `io.ktor.server.plugins.di`): register with `dependencies { provide { } }`, resolve with `dependencies.resolve()`.
+*   Since 3.2, application modules can be `suspend` functions — `resolve()` suspends until the dependency graph is ready, so async initialization (e.g. a datasource) needs no workarounds.
+*   **Koin remains acceptable**, especially in existing codebases already using it or when you need its wider ecosystem — declare beans in Koin modules and resolve via `get()`.
 
 ```kotlin
+// Built-in DI (Ktor 3.2+)
+fun Application.diModule() {
+    dependencies {
+        provide<UserRepository> { ExposedUserRepository(resolve()) }
+        provide { UserService(resolve()) }
+    }
+}
+
+// Modules may be suspend (3.2+); resolve() suspends until dependencies are ready
+suspend fun Application.userModule() {
+    val service: UserService = dependencies.resolve()
+    routing { userRoutes(service) }
+}
+
+// Koin alternative (existing codebases)
 val appModule = module {
     single<UserRepository> { ExposedUserRepository(get()) }
     single { UserService(get()) }
@@ -138,11 +166,13 @@ fun Application.configureKoin() {
 ```yaml
 ktor:
   deployment:
-    port: $PORT:8080
+    port: "$PORT:8080"   # YAML supports env var with inline default ($VAR:default)
 jwt:
-  secret: $JWT_SECRET
+  secret: "$JWT_SECRET"
   issuer: "nelhson"
 ```
+
+*   Note: the inline `:default` fallback is a YAML-config feature. In HOCON (`application.conf`) there is no inline default — set the default separately and override with `port = ${?PORT}`.
 
 ### 7. Structured Concurrency in Handlers
 *   Route handlers are already suspend functions — call suspend services directly; **NEVER** launch coroutines in `GlobalScope` from a handler.

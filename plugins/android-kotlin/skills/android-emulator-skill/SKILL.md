@@ -1,7 +1,6 @@
 ---
 name: android-emulator-skill
-version: 1.0.0
-description: Production-ready scripts for Android app testing, building, and automation. Provides semantic UI navigation, build automation, log monitoring, and emulator lifecycle management. Optimized for AI agents with minimal token output.
+description: Production-ready scripts for Android app testing, building, and automation. Use when building, installing, or driving an app on an Android emulator/device — launching apps, tapping/typing via semantic UI navigation, monitoring logcat, or managing AVDs. Optimized for AI agents with minimal token output.
 ---
 
 # Android Emulator Skill

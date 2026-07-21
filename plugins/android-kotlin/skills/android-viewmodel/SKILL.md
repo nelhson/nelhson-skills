@@ -1,6 +1,6 @@
 ---
 name: android-viewmodel
-description: Best practices for implementing Android ViewModels, specifically focused on StateFlow for UI state and SharedFlow for one-off events.
+description: Best practices for implementing Android ViewModels, focused on StateFlow for UI state and modeling one-off events as state. Use when creating or refactoring a ViewModel, exposing UI state to Compose/Views, or handling one-off UI events (snackbars, toasts, navigation signals).
 ---
 
 # Android ViewModel & State Management
@@ -20,15 +20,32 @@ Use `ViewModel` to hold state and business logic. It must outlive configuration 
     ```
 *   **Updates**: Update state using `.update { oldState -> ... }` for thread safety.
 
-### 2. One-Off Events (SharedFlow)
-*   **What**: Transient events like "Show Toast", "Navigate to Screen", "Show Snackbar".
-*   **Type**: `SharedFlow<UiEvent>`.
-*   **Configuration**: Must use `replay = 0` to prevent events from re-triggering on screen rotation.
+### 2. One-Off Events (Model as State)
+*   **What**: Transient signals like "Show Snackbar", "Show Toast", "Navigate to Screen".
+*   **Default**: Model events **as state** that the UI consumes and then asks the ViewModel to clear. Fire-and-forget event flows can silently **drop events** when no collector is active (configuration change, backgrounded UI, process death), which is why current Google guidance treats them as an anti-pattern.
+    ```kotlin
+    data class UiState(
+        val userMessage: String? = null, // one-off event, held in state
+        // ... other state
+    )
+
+    fun onLoginFailed() {
+        _uiState.update { it.copy(userMessage = "Login failed") }
+    }
+
+    // Called by the UI after the message has been shown
+    fun userMessageShown() {
+        _uiState.update { it.copy(userMessage = null) }
+    }
+    ```
+    The UI observes `userMessage`, shows the snackbar/toast (or navigates), then calls `userMessageShown()` to clear it. The event survives rotation and process recreation, and cannot be lost.
+*   **Alternative (use with caution)**: `SharedFlow<UiEvent>` with `replay = 0`.
     ```kotlin
     private val _uiEvent = MutableSharedFlow<UiEvent>(replay = 0)
     val uiEvent: SharedFlow<UiEvent> = _uiEvent.asSharedFlow()
     ```
-*   **Sending**: Use `.emit(event)` (suspend) or `.tryEmit(event)`.
+    *   Send with `.emit(event)` (suspend) or `.tryEmit(event)`.
+    *   **Caveat**: emissions with no active collector are dropped. Only acceptable when losing the event is harmless (e.g., a purely cosmetic animation trigger). Never use it for navigation or anything that *must* happen.
 
 ### 3. Collecting in UI
 *   **Compose**: Use `collectAsStateWithLifecycle()` for `StateFlow`.

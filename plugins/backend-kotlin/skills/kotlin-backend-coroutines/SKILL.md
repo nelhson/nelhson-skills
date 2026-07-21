@@ -16,22 +16,20 @@ This skill provides authoritative rules for using Kotlin Coroutines on the serve
 *   **Resilience**: Timeouts, retries with backoff, cancellation on client disconnect.
 *   **Context Propagation**: MDC / tracing context across coroutines.
 
-## Applicability
-
-Activate this skill when the user asks to:
-*   "Call several services in parallel."
-*   "Wrap a blocking database/HTTP call."
-*   "Stream results to the client."
-*   "Add a timeout / retry."
-*   "Fix a coroutine leak or hung request in a backend."
-
 ## Critical Rules & Constraints
 
 ### 1. Dispatcher Selection
 *   **`Dispatchers.IO`** — blocking I/O only (JDBC, file access, blocking clients).
 *   **`Dispatchers.Default`** — CPU-bound work (serialization of large payloads, crypto, compression).
 *   **NEVER** run blocking calls on the server engine's event-loop threads (Netty/CIO) — it starves the whole server.
+*   **Bounded pools**: don't build custom `Executors` pools just to cap concurrency — carve a view off IO with `Dispatchers.IO.limitedParallelism(n)` (e.g. one per database matching its connection-pool size). Views share IO's threads, so no extra thread cost.
+*   **Virtual threads (Java 21+)**: for heavy blocking interop, `Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()` gives a dispatcher where each blocking call gets its own cheap virtual thread. Use it when blocking call volume would exhaust `Dispatchers.IO`'s 64-thread default; plain `Dispatchers.IO` remains the default choice (remember to close the executor with the application).
 *   Inject dispatchers via constructor for testability (same rule as on Android).
+
+```kotlin
+// Cap concurrent JDBC work to the connection pool size
+val dbDispatcher = Dispatchers.IO.limitedParallelism(20)
+```
 
 ### 2. Wrap Blocking Calls with withContext
 *   **ALWAYS** confine blocking APIs (JDBC, JPA, legacy SDKs) inside `withContext(Dispatchers.IO)` at the repository layer, so all callers get a main-safe suspend function.
@@ -84,7 +82,9 @@ fun events(): Flow<Event> =
 
 ### 5. Timeouts and Retries
 *   **ALWAYS** bound outbound calls with `withTimeout`; convert `TimeoutCancellationException` to a domain error at the boundary.
-*   Retry only idempotent operations, with exponential backoff and a retry cap.
+*   Retry only idempotent operations, with exponential backoff, **jitter** (so synchronized clients don't retry in lockstep), and a retry cap.
+*   The helper below catches a narrow type (`IOException`). If you ever widen the catch (e.g. `catch (e: Exception)`), you **must** rethrow `CancellationException` first — see rule 6 — or retries will keep running after the client disconnected.
+*   For `Flow` pipelines, use the built-in `Flow.retryWhen { cause, attempt -> ... }` (or `retry(n)`) instead of hand-rolled loops — `delay()` inside the predicate gives you backoff.
 
 ```kotlin
 suspend fun <T> retrying(
@@ -95,7 +95,8 @@ suspend fun <T> retrying(
     var delayTime = initialDelay
     repeat(times - 1) {
         try { return block() } catch (e: IOException) {
-            delay(delayTime)
+            // jitter: sleep a random 50-100% of the backoff window
+            delay(delayTime * Random.nextDouble(0.5, 1.0))
             delayTime *= 2
         }
     }
@@ -103,6 +104,15 @@ suspend fun <T> retrying(
 }
 
 val user = withTimeout(2.seconds) { retrying { client.fetchUser(id) } }
+
+// Flow variant: retry transient failures with backoff + jitter
+fun events(): Flow<Event> = source.events()
+    .retryWhen { cause, attempt ->
+        if (cause is IOException && attempt < 3) {
+            delay((100.milliseconds * 2.0.pow(attempt.toInt())) * Random.nextDouble(0.5, 1.0))
+            true
+        } else false
+    }
 ```
 
 ### 6. Cancellation on Client Disconnect

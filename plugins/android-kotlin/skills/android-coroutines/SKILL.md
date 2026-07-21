@@ -1,6 +1,6 @@
 ---
 name: android-coroutines
-description: Authoritative rules and patterns for production-quality Kotlin Coroutines onto Android. Covers structured concurrency, lifecycle integration, and reactive streams.
+description: Authoritative rules and patterns for production-quality Kotlin Coroutines on Android. Use when writing new coroutine/Flow code on Android — suspend functions, dispatchers, structured concurrency, lifecycle-safe collection, callback conversion, or coroutine tests. Covers structured concurrency, lifecycle integration, and reactive streams. (For reviewing or fixing existing concurrency code, use kotlin-concurrency-expert.)
 ---
 
 # Android Coroutines Expert Skill
@@ -23,8 +23,8 @@ Activate this skill when the user asks to:
 *   "Perform background processing."
 *   "Fix a memory leak" related to threads/tasks.
 *   "Convert a listener/callback to Coroutines."
-*   "Implement a ViewModel."
-*   "Handle UI state updates."
+
+(For implementing ViewModels and UI state handling, use the `android-viewmodel` skill. For reviewing/fixing existing coroutine code, use the `kotlin-concurrency-expert` skill.)
 
 ## Critical Rules & Constraints
 

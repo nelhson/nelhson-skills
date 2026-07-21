@@ -16,15 +16,6 @@ This skill provides authoritative rules for writing idiomatic, production-qualit
 *   **Configuration**: Type-safe `@ConfigurationProperties` data classes.
 *   **Validation & Null-Safety**: Enforcing non-null contracts at the web boundary.
 
-## Applicability
-
-Activate this skill when the user asks to:
-*   "Create a Spring Boot service/controller/repository in Kotlin."
-*   "Fix lateinit / autowired issues."
-*   "Add JPA entities in Kotlin."
-*   "Use coroutines with Spring."
-*   "Bind configuration properties."
-
 ## Critical Rules & Constraints
 
 ### 1. Constructor Injection Only
@@ -95,6 +86,11 @@ class UserController(private val service: UserService) {
 }
 ```
 
+#### Virtual threads (MVC + JDBC)
+*   On Java 21+, `spring.threads.virtual.enabled=true` runs blocking MVC request handling on virtual threads — for classic MVC+JDBC stacks this is the mainstream alternative to sprinkling `withContext(Dispatchers.IO)` around blocking calls: plain blocking code simply scales.
+*   Caveats: watch for **pinning** — `synchronized` blocks around I/O (older HikariCP/driver versions) pin the carrier thread; prefer `ReentrantLock`, keep pool libraries current (JDK 24+ removes most `synchronized` pinning). Virtual threads remove the thread ceiling, not the DB connection-pool ceiling.
+*   Coroutines still win when you need WebFlux/R2DBC, `Flow` streaming, or structured concurrency (fan-out with `async`/`awaitAll`, cancellation, timeouts) — virtual threads give you cheap blocking, not structured concurrency.
+
 ### 5. Type-Safe Configuration
 *   **NEVER** scatter `@Value("\${...}")` strings across classes.
 *   **ALWAYS** bind related settings into an immutable `@ConfigurationProperties` data class.
@@ -112,6 +108,7 @@ data class MailProperties(
 ### 6. Null-Safety at the Web Boundary
 *   Declare DTO fields non-null wherever the contract requires them; combine with Bean Validation for messages.
 *   **NEVER** use `!!` on request data — absent values must produce a 400, not a 500.
+*   `jackson-module-kotlin` is auto-configured by Spring Boot once it is on the classpath (no manual `ObjectMapper` registration); on data-class DTOs, put Bean Validation annotations on the field with the `@field:` use-site target (as below) — otherwise they land on the constructor parameter and validators may not see them.
 
 ```kotlin
 data class CreateUserRequest(
@@ -126,7 +123,7 @@ suspend fun create(@Valid @RequestBody request: CreateUserRequest): UserResponse
 
 ### 7. Repositories & Transactions
 *   Use Spring Data interfaces with Kotlin nullability: return `T?` instead of `Optional<T>`.
-*   `@Transactional` only works on beans (proxied) — with coroutines use `@Transactional` on suspend functions only with reactive transaction managers; for JDBC keep transactional work inside a blocking service method wrapped by `withContext(Dispatchers.IO)`.
+*   `@Transactional` only works on beans (proxied). `@Transactional` **suspend** functions are supported when a reactive transaction manager is in play (e.g. R2DBC's `R2dbcTransactionManager` — the transaction context propagates through the coroutine context); for JDBC keep transactional work inside a blocking service method wrapped by `withContext(Dispatchers.IO)` (or run blocking MVC on virtual threads, see rule 4).
 
 ```kotlin
 interface UserRepository : JpaRepository<UserEntity, Long> {
@@ -135,5 +132,8 @@ interface UserRepository : JpaRepository<UserEntity, Long> {
 ```
 
 ### 8. Testing
-*   **ALWAYS** use `@SpringBootTest` sparingly; prefer slice tests (`@WebMvcTest`/`@WebFluxTest`, `@DataJpaTest`) with MockK (`@MockkBean` via springmockk) over Mockito for Kotlin.
+*   **ALWAYS** use `@SpringBootTest` sparingly; prefer slice tests (`@WebMvcTest`/`@WebFluxTest`, `@DataJpaTest`).
+*   For mocking beans in the Spring context on Boot 3.4+: `@MockBean` is deprecated (removed in Boot 4.0) in favor of Spring Framework's `@MockitoBean`/`@MockitoSpyBean`. The reliable path is **`@MockitoBean` + `mockito-kotlin`** (Kotlin-friendly `whenever`/`any()` syntax). Note `@MockitoBean` is not a 1:1 replacement — e.g. it cannot be used in `@Configuration` classes.
+*   springmockk's `@MockkBean` chases Spring's internals from outside the project (its 5.x line targets Spring Framework 7) and has repeatedly needed major-version bumps to keep up — treat it as fragile on Boot 3.4+; pin a version verified against your Boot version if you keep it.
+*   **MockK remains the first choice for plain unit tests** that don't need a Spring context.
 *   Use `runTest` for suspend service tests.

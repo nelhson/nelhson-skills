@@ -26,7 +26,7 @@ Focus on:
 - **Recomposition storms** from unstable parameters or broad state changes.
 - **Unstable keys** in `LazyColumn`/`LazyRow` (`key` churn, missing keys).
 - **Heavy work in composition** (formatting, sorting, filtering, object allocation).
-- **Unnecessary recompositions** (missing `remember`, unstable classes, lambdas).
+- **Unnecessary recompositions** (missing `remember` for expensive values, unstable classes compared by instance equality).
 - **Large images** without proper sizing or async loading.
 - **Layout thrash** (deep nesting, intrinsic measurements, `SubcomposeLayout` misuse).
 
@@ -65,7 +65,7 @@ Summarize findings with evidence from traces/Layout Inspector.
 ## 4. Remediate
 
 Apply targeted fixes:
-- **Stabilize parameters**: Use `@Stable` or `@Immutable` annotations on data classes.
+- **Stabilize parameters**: Use `@Stable`/`@Immutable` on data classes (especially in non-Compose modules) so skipping uses `equals()` instead of instance equality.
 - **Stabilize keys**: Use stable, unique IDs for `LazyColumn`/`LazyRow` items.
 - **Defer state reads**: Use `derivedStateOf`, lambda-based modifiers, or `Modifier.drawBehind`.
 - **Remember expensive computations**: Wrap in `remember { }` or `remember(key) { }`.
@@ -73,18 +73,21 @@ Apply targeted fixes:
 - **Async image loading**: Use Coil/Glide with proper sizing constraints.
 - **Reduce layout complexity**: Flatten hierarchies, avoid deep nesting.
 
+## Strong Skipping: What It Fixes (and What It Doesn't)
+
+Strong skipping is **on by default** since the Compose compiler shipped with Kotlin 2.0.20. Calibrate advice to it before recommending fixes:
+
+**Fixed automatically — do not recommend these anymore:**
+- Wrapping every lambda in `remember { }`. Lambdas with unstable captures are now memoized by the compiler.
+- `remember`-ing static `Modifier` chains "to avoid allocation". This was always noise; modifier chains are cheap and comparison is handled by the runtime.
+- Making a composable skippable just because one parameter type is unstable — composables with unstable parameters are now skippable too.
+
+**NOT fixed — still audit for these:**
+- Unstable parameters are compared with **instance equality**, not `equals()`. If upstream code produces a *new* `List`, `copy()`-ed data class, or mapped collection on every emission, the composable still recomposes every time. Fix the producer (cache/`distinctUntilChanged`) or make the type stable so `equals()` is used.
+- Classes from **modules without the Compose compiler** (pure Kotlin/Java modules, third-party libraries) and **interface/abstract types** are inferred unstable, so they fall into instance-equality comparison. `@Immutable`/`@Stable` annotations, stability configuration files, and `kotlinx.collections.immutable` types still matter: they upgrade comparison to `equals()`-based skipping.
+- Lambdas capturing `var`s or unstable receivers can still defeat memoization — but verify with compiler reports before "fixing".
+
 ## Common Code Smells (and Fixes)
-
-### Unstable lambda captures
-
-```kotlin
-// BAD: New lambda instance every recomposition
-Button(onClick = { viewModel.doSomething(item) }) { ... }
-
-// GOOD: Use remember or method reference
-val onClick = remember(item) { { viewModel.doSomething(item) } }
-Button(onClick = onClick) { ... }
-```
 
 ### Expensive work in composition
 
@@ -154,15 +157,18 @@ fun AnimatedBox(scrollState: ScrollState) {
 }
 ```
 
-### Object allocation in composition
+### Unstable data crossing module boundaries
 
 ```kotlin
-// BAD: Creates new Modifier chain every recomposition
-Box(modifier = Modifier.padding(16.dp).background(Color.Red))
+// BAD: UiState defined in a pure-Kotlin :domain module (no Compose compiler)
+// is inferred unstable -> instance-equality comparison; a new .copy() or
+// re-mapped list per emission recomposes consumers every time
+data class UiState(val items: List<Item>)
 
-// GOOD for dynamic modifiers: Remember the modifier
-val modifier = remember { Modifier.padding(16.dp).background(Color.Red) }
-Box(modifier = modifier)
+// GOOD: Annotate in a Compose-aware module (or use a stability config file)
+// so skipping falls back to equals()
+@Immutable
+data class UiState(val items: ImmutableList<Item>)
 ```
 
 ## Stability Checklist
@@ -171,9 +177,10 @@ Box(modifier = modifier)
 |------|-------------------|-----|
 | Primitives (`Int`, `String`, `Boolean`) | Yes | N/A |
 | `data class` with stable fields | Yes* | Ensure all fields are stable |
-| `List`, `Map`, `Set` | **No** | Use `ImmutableList` from kotlinx |
+| `List`, `Map`, `Set` | **No** | Use `ImmutableList` from kotlinx (enables `equals()`-based skipping) |
 | Classes with `var` properties | **No** | Use `@Stable` if externally stable |
-| Lambdas | **No** | Use `remember { }` |
+| Classes from non-Compose modules / interfaces | **No** | `@Immutable`/`@Stable` or a stability configuration file |
+| Lambdas | N/A | Memoized automatically under strong skipping; no manual `remember` needed |
 
 ## 5. Verify
 

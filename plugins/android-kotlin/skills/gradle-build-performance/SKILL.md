@@ -57,8 +57,9 @@ description: Debug and optimize Android/Gradle build performance. Use when build
 
 ```bash
 ./gradlew assembleDebug --info | grep -E "^\:.*"
-# Or view in Android Studio: Build > Analyze APK Build
 ```
+
+Or use Android Studio's **Build Analyzer**: run a build, then open the **Build Analyzer** tab in the Build tool window. (Note: **Build > Analyze APK...** inspects APK *contents/size*, not build performance.)
 
 ---
 
@@ -82,7 +83,7 @@ Build scan → Performance → Build timeline
 
 ---
 
-## 12 Optimization Patterns
+## 11 Optimization Patterns
 
 ### 1. Enable Configuration Cache
 
@@ -136,11 +137,15 @@ KSP is 2x faster than kapt for Kotlin:
 
 ```kotlin
 // Before (slow)
-kapt("com.google.dagger:hilt-compiler:2.51.1")
+kapt("com.google.dagger:hilt-compiler:2.57.1")
 
 // After (fast)
-ksp("com.google.dagger:hilt-compiler:2.51.1")
+ksp("com.google.dagger:hilt-compiler:2.57.1")
 ```
+
+**KSP2 note**: KSP2 is the default implementation since KSP 2.0.0 (built on the K2 Analysis API, with better incremental behavior). KSP1 does not support Kotlin 2.3+ or AGP 9+, so keep the KSP plugin version current when upgrading Kotlin/AGP.
+
+**AGP built-in Kotlin**: AGP 9.0+ ships built-in Kotlin support (no separate `org.jetbrains.kotlin.android` plugin). When adopting it, verify your KSP and Compose compiler plugin versions are compatible before upgrading — mismatches surface as configuration-time failures.
 
 ### 7. Avoid Dynamic Dependencies
 
@@ -183,15 +188,7 @@ includeBuild("shared-library") {
 }
 ```
 
-### 10. Enable Incremental Annotation Processing
-
-```properties
-# gradle.properties
-kapt.incremental.apt=true
-kapt.use.worker.api=true
-```
-
-### 11. Avoid Configuration-Time I/O
+### 10. Avoid Configuration-Time I/O
 
 Don't read files or make network calls during configuration:
 
@@ -203,7 +200,7 @@ val version = file("version.txt").readText()
 val version = providers.fileContents(file("version.txt")).asText
 ```
 
-### 12. Use Lazy Task Configuration
+### 11. Use Lazy Task Configuration
 
 Avoid `create()`, use `register()`:
 
@@ -219,41 +216,11 @@ tasks.register("myTask") { ... }
 
 ## Common Bottleneck Analysis
 
-### Slow Configuration Phase
+Once the build scan points at a specific symptom, read `reference.md` in this skill directory for the matching cause/fix tables:
 
-**Symptoms**: Build scan shows long "Configuring build" time
-
-**Causes & Fixes**:
-| Cause | Fix |
-|-------|-----|
-| Eager task creation | Use `tasks.register()` instead of `tasks.create()` |
-| buildSrc with many dependencies | Migrate to Convention Plugins with `includeBuild` |
-| File I/O in build scripts | Use `providers.fileContents()` |
-| Network calls in plugins | Cache results or use offline mode |
-
-### Slow Compilation
-
-**Symptoms**: `:app:compileDebugKotlin` takes too long
-
-**Causes & Fixes**:
-| Cause | Fix |
-|-------|-----|
-| Non-incremental changes | Avoid `build.gradle.kts` changes that invalidate cache |
-| Large modules | Break into smaller feature modules |
-| Excessive kapt usage | Migrate to KSP |
-| Kotlin compiler memory | Increase `kotlin.daemon.jvmargs` |
-
-### Cache Misses
-
-**Symptoms**: Tasks always rerun despite no changes
-
-**Causes & Fixes**:
-| Cause | Fix |
-|-------|-----|
-| Unstable task inputs | Use `@PathSensitive`, `@NormalizeLineEndings` |
-| Absolute paths in outputs | Use relative paths |
-| Missing `@CacheableTask` | Add annotation to custom tasks |
-| Different JDK versions | Standardize JDK across environments |
+- **Slow configuration phase** — eager task creation, buildSrc, configuration-time I/O
+- **Slow compilation** — non-incremental changes, oversized modules, kapt, compiler memory
+- **Cache misses** — unstable inputs, absolute paths, missing `@CacheableTask`, JDK drift
 
 ---
 

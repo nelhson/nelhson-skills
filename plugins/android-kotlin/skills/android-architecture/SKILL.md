@@ -16,6 +16,7 @@ Structure the application into three primary layers. Dependencies must strictly 
     *   **Responsibility**: Displaying data and handling user interactions.
     *   **Components**: Activities, Fragments, Composables, ViewModels.
     *   **Dependencies**: Depends on the Domain Layer (or Data Layer if simple). **Never** depends on the Data Layer implementation details directly.
+    *   **UI state**: see the `android-viewmodel` skill for StateFlow-based state and one-off event handling.
 *   **Domain Layer (Business Logic) [Optional but Recommended]**:
     *   **Responsibility**: Encapsulating complex business rules and reuse.
     *   **Components**: Use Cases (e.g., `GetLatestNewsUseCase`), Domain Models (pure Kotlin data classes).
@@ -25,6 +26,7 @@ Structure the application into three primary layers. Dependencies must strictly 
     *   **Responsibility**: Managing application data (fetching, caching, saving).
     *   **Components**: Repositories (implementations), Data Sources (Retrofit APIs, Room DAOs).
     *   **Dependencies**: Depends only on external sources and libraries.
+    *   **Details**: see the `android-data-layer` skill (repositories, Room, offline-first) and the `android-retrofit` skill (networking).
 
 ### 2. Dependency Injection with Hilt
 Use **Hilt** for all dependency injection.
@@ -35,6 +37,7 @@ Use **Hilt** for all dependency injection.
 *   **Modules**:
     *   Use `@Module` and `@InstallIn(SingletonComponent::class)` for app-wide singletons (e.g., Network, Database).
     *   Use `@Binds` in an abstract class to bind interface implementations (cleaner than `@Provides`).
+*   **Testing with Hilt**: see the `android-testing` skill for `HiltAndroidRule`-based integration tests.
 
 ### 3. Modularization Strategy
 For production apps, use a multi-module strategy to improve build times and separation of concerns.
