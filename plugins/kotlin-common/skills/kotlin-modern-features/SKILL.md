@@ -1,6 +1,6 @@
 ---
 name: kotlin-modern-features
-description: Advisory catalog of modern Kotlin 2.x language features (context parameters, guard conditions, explicit backing fields, collection literals, etc.) with stability status and version requirements. Use when writing, reviewing, or refactoring Kotlin code in any project to suggest newer language features that simplify the code.
+description: Advisory catalog of modern Kotlin 2.x language features (context parameters, guard conditions, explicit backing fields, smart casts) and stdlib APIs (Enum.entries, Base64, Uuid, kotlin.time) with stability status and version requirements. Use when writing, reviewing, or refactoring Kotlin code in any project to suggest newer language features that simplify the code.
 ---
 
 # Modern Kotlin Language Features (2.x era, current through 2.4.0)
@@ -27,8 +27,23 @@ Advisory "note" skill: when code being written or reviewed matches a **trigger**
 | **Non-local `break`/`continue`** | 2.2 | Boolean flags or labeled returns to exit an outer loop from inside an inline lambda (`forEach`, `let`) → plain `break`/`continue` |
 | **Multi-dollar string interpolation** | 2.2 | Strings full of escaped `$` (JSON schemas, regex, Gradle/GitHub templates) → `$$"..."` |
 | **Nested type aliases** | 2.3 | A complex generic type repeated only within one class → `typealias` declared inside the class |
-| **Data-flow exhaustiveness for `when`** | 2.3 | Redundant `else` branch after sealed-type/enum checks already proven exhaustive by earlier flow → drop the `else` |
+| **Data-flow exhaustiveness for `when`** | 2.1/2.3 | Redundant `else` branch after sealed-type/enum checks already proven exhaustive (2.1: sealed with generics; 2.3: data-flow analysis) → drop the `else` |
 | **`return` in expression bodies** | 2.3 | Early-return needs forced a block body on an otherwise single-expression function (explicit return type required) |
+| **K2 smart cast improvements** | 2.0 | Explicit casts or `!!` after type checks — including checks combined with `\|\|`, checks on local `val`s, and in `catch`/`finally` → drop the cast, rely on smart cast |
+| **`@SubclassOptInRequired`** | 2.1 | Library exposes an unstable interface/class that users shouldn't extend yet → require explicit opt-in to subclass |
+| **Extra compiler checks `-Wextra`** | 2.1 | Project wants stricter static analysis → enable `-Wextra` (15 opt-in code-quality warnings) |
+
+## Stable standard library
+
+| Feature | Since | Trigger → suggestion |
+|---|---|---|
+| **`Enum.entries` / `enumEntries<T>()`** | 2.0 | `MyEnum.values()` or `enumValues<T>()` → `entries` (returns a cached list, no array allocation per call) |
+| **Common `AutoCloseable` + `use`** | 2.0 | Manual try/finally resource cleanup, especially in multiplatform common code → `AutoCloseable.use { }` |
+| **`Path` tree traversal** | 2.1 | Manual recursive directory walking with `java.io.File` → `java.nio.file.Path` extensions `walk()`, `fileVisitor()`, `visitFileTree()` |
+| **`Base64` API** | 2.2 | `java.util.Base64` or hand-rolled encoding → multiplatform `kotlin.io.encoding.Base64` (`Default`/`UrlSafe`/`Mime`/`Pem`) |
+| **`HexFormat` API** | 2.2 | Manual hex conversion (`String.format("%02x")`, lookup tables) → `toHexString()` / `hexToByteArray()` |
+| **`kotlin.time.Instant` / `Clock`** | 2.3 | `System.currentTimeMillis()` or `java.time.Instant` in shared/common code; untestable time access → inject `Clock`, use `kotlin.time.Instant` |
+| **`kotlin.uuid.Uuid`** | 2.4 | `java.util.UUID` in common/multiplatform code → `kotlin.uuid.Uuid` (v4/v7 generation, `parseOrNull`) |
 
 ## Watchlist: experimental / preview features — DO NOT USE
 

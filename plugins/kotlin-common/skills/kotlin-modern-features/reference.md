@@ -111,6 +111,101 @@ fun handle(r: Result) {
 }
 ```
 
+## K2 smart cast improvements (stable, 2.0)
+
+```kotlin
+// Before: manual cast after a check combined with ||
+if (obj is Cat || obj is Dog) {
+    (obj as Animal).feed()
+}
+
+// After: smart cast to the common supertype
+if (obj is Cat || obj is Dog) {
+    obj.feed()
+}
+```
+
+## `@SubclassOptInRequired` (stable, 2.1)
+
+```kotlin
+@RequiresOptIn(level = RequiresOptIn.Level.WARNING)
+annotation class UnstableApi
+
+@SubclassOptInRequired(UnstableApi::class)
+interface CoreLibraryApi   // implementing it requires @OptIn(UnstableApi::class)
+```
+
+## `Enum.entries` (stable, 2.0)
+
+```kotlin
+// Before: allocates a new array on every call
+RGB.values().forEach { println(it) }
+
+// After: cached immutable list
+RGB.entries.forEach { println(it) }
+
+// Generic version: enumValues<T>() → enumEntries<T>()
+```
+
+## Common `AutoCloseable` + `use` (stable, 2.0)
+
+```kotlin
+// Works in multiplatform common code, not just JVM
+val resource = AutoCloseable { writer.flushAndClose() }
+resource.use { /* ... */ }   // closed even on exception
+```
+
+## `Path` tree traversal (stable, 2.1)
+
+```kotlin
+// Before: recursive java.io.File walking by hand
+// After:
+Path("dir").walk().filter { it.extension == "log" }.forEach(::println)
+```
+
+## `Base64` API (stable, 2.2)
+
+```kotlin
+// Before: java.util.Base64 (JVM-only)
+// After: multiplatform
+Base64.Default.encode(bytes)      // "Zm8="
+Base64.UrlSafe.encode(bytes)      // URL/filename-safe variant
+Base64.decode("Zm8=")
+```
+
+## `HexFormat` API (stable, 2.2)
+
+```kotlin
+// Before: String.format("%02x", b) loops
+// After:
+93.toHexString()                  // "0000005d"
+"5d".hexToByte()
+byteArrayOf(0xDE.toByte()).toHexString()
+```
+
+## `kotlin.time.Instant` / `Clock` (stable, 2.3)
+
+```kotlin
+// Before: untestable, JVM-only
+val now = System.currentTimeMillis()
+
+// After: multiplatform and injectable for tests
+class OrderService(private val clock: Clock = Clock.System) {
+    fun stamp(): Instant = clock.now()
+}
+// test: pass a fake Clock returning a fixed Instant
+```
+
+## `kotlin.uuid.Uuid` (stable, 2.4)
+
+```kotlin
+// Before: java.util.UUID (JVM-only)
+// After: multiplatform
+val id = Uuid.generateV4()
+val sortable = Uuid.generateV7()          // time-ordered, DB-index friendly
+val parsed = Uuid.parseOrNull(input)      // null instead of exception
+```
+
 ---
 
 # Watchlist examples — DO NOT USE
