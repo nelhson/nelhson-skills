@@ -8,6 +8,8 @@ Each technology is a separate plugin (skill pack) that can be enabled independen
 - **backend-kotlin** — Kotlin server-side skills (Ktor, Spring Boot in Kotlin, server coroutines).
 - **kotlin-common** — technology-agnostic Kotlin language skills (modern 2.x language features, modernization hints).
 - **android-official** — curated skills referenced live from Google's official [android/skills](https://github.com/android/skills) repo.
+- **kotlin-official** — tooling/migration skills referenced live from JetBrains' official [Kotlin/kotlin-agent-skills](https://github.com/Kotlin/kotlin-agent-skills) repo.
+- **kmp-community** — KMP/Compose Multiplatform skills referenced live from [mmiani/kotlin-kmp-claude-agent-skills](https://github.com/mmiani/kotlin-kmp-claude-agent-skills) (community, Apache-2.0, grounded in official Google/JetBrains docs).
 
 ## Quick start
 
@@ -31,6 +33,8 @@ Then, in a Claude Code session:
 /plugin install backend-kotlin@nelhson-skills
 /plugin install kotlin-common@nelhson-skills
 /plugin install android-official@nelhson-skills
+/plugin install kotlin-official@nelhson-skills
+/plugin install kmp-community@nelhson-skills
 ```
 
 Skills are invoked as `/<plugin>:<skill>`, e.g. `/android-kotlin:compose-ui` or `/backend-kotlin:ktor-server`, and are also auto-invoked by Claude when their description matches the task.
@@ -96,6 +100,24 @@ nelhson-skills/
 ### android-official (external, referenced)
 
 Curated skill groups pulled live from `github.com/android/skills` (jetpack-compose, navigation, testing, performance, system). Note: Google's skills target multiple agents and a few reference their `android` CLI — treat those parts as reference content.
+
+### kotlin-official (external, referenced)
+
+Official JetBrains skills pulled live from `github.com/Kotlin/kotlin-agent-skills` (Apache-2.0, JetBrains Incubator). Tooling/migration focused:
+
+| Skill | Purpose |
+|---|---|
+| `kotlin-tooling-agp9-migration` | Migrate KMP/Android projects to Android Gradle Plugin 9.0+ |
+| `kotlin-tooling-cocoapods-spm-migration` | CocoaPods → Swift Package Manager migration for KMP iOS targets |
+| `kotlin-tooling-native-build-performance` | Kotlin/Native build speed diagnosis |
+| `kotlin-tooling-immutable-collections-0-5-x-migration` | kotlinx.collections.immutable 0.5.x migration |
+| `kotlin-tooling-java-to-kotlin` | Java → Kotlin conversion |
+
+Deliberately excluded: `kotlin-backend-jpa-entity-mapping` — overlaps the locally authored `backend-kotlin` plugin.
+
+### kmp-community (external, referenced)
+
+All 15 KMP/Compose Multiplatform skills pulled live from `github.com/mmiani/kotlin-kmp-claude-agent-skills` (community-maintained, Apache-2.0, grounded in official Android/Kotlin/Compose guidance). Covers CMP UI, navigation, adaptive resources, KMP data layer, platform bridges (expect/actual), deep links, Gradle governance, testing, architecture/code review, modularization, state management, and feature/bugfix/refactor workflows. Neither Google (`android/skills`) nor JetBrains publish CMP UI skills — this fills that gap.
 
 ## Adding a new technology
 

@@ -4,7 +4,7 @@
     "name": "Boris Veriga",
     "email": "borisveriga@gmail.com"
   },
-  "description": "Personal Kotlin-focused skill packs for Claude Code: Android, backend (Ktor/Spring Boot), and curated external sources.",
+  "description": "Personal Kotlin-focused skill packs for Claude Code: Android, backend (Ktor/Spring Boot), multiplatform (KMP/Compose Multiplatform), and curated external sources.",
   "plugins": [
     {
       "name": "android-kotlin",
@@ -46,6 +46,54 @@
       "homepage": "https://github.com/android/skills",
       "category": "android",
       "keywords": ["android", "google", "official"]
+    },
+    {
+      "name": "kotlin-official",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/Kotlin/kotlin-agent-skills.git"
+      },
+      "strict": false,
+      "skills": [
+        "./skills/kotlin-tooling-agp9-migration",
+        "./skills/kotlin-tooling-cocoapods-spm-migration",
+        "./skills/kotlin-tooling-native-build-performance",
+        "./skills/kotlin-tooling-immutable-collections-0-5-x-migration",
+        "./skills/kotlin-tooling-java-to-kotlin"
+      ],
+      "description": "Official JetBrains Kotlin agent skills (tooling/migration), tracked upstream.",
+      "homepage": "https://github.com/Kotlin/kotlin-agent-skills",
+      "category": "multiplatform",
+      "keywords": ["kotlin", "jetbrains", "official", "kmp"]
+    },
+    {
+      "name": "kmp-community",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/mmiani/kotlin-kmp-claude-agent-skills.git"
+      },
+      "strict": false,
+      "skills": [
+        "./skills/kotlin-ui-compose-multiplatform",
+        "./skills/kotlin-navigation-compose-multiplatform",
+        "./skills/kotlin-ui-adaptive-resources",
+        "./skills/kotlin-data-kmp-data-layer",
+        "./skills/kotlin-platform-kmp-bridges",
+        "./skills/kotlin-platform-app-links-and-deep-links",
+        "./skills/kotlin-build-kmp-gradle-governance",
+        "./skills/kotlin-testing-kmp",
+        "./skills/kotlin-project-architecture-review",
+        "./skills/kotlin-project-modularization",
+        "./skills/kotlin-project-state-management",
+        "./skills/kotlin-project-feature-implementation",
+        "./skills/kotlin-project-bugfix",
+        "./skills/kotlin-kmp-code-review",
+        "./skills/kotlin-kmp-refactor-safety"
+      ],
+      "description": "Community KMP/Compose Multiplatform skills (mmiani), grounded in official Google/JetBrains docs, tracked upstream. Apache-2.0.",
+      "homepage": "https://github.com/mmiani/kotlin-kmp-claude-agent-skills",
+      "category": "multiplatform",
+      "keywords": ["kotlin", "multiplatform", "compose-multiplatform", "kmp"]
     }
   ]
 }
